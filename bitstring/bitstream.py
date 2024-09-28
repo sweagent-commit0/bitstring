@@ -1,14 +1,11 @@
 from __future__ import annotations
-
 import bitstring
 from bitstring.bits import Bits, BitsType
 from bitstring.dtypes import Dtype
 from typing import Union, List, Any, Optional, overload, TypeVar, Tuple
 import copy
 import numbers
-
-TConstBitStream = TypeVar("TConstBitStream", bound='ConstBitStream')
-
+TConstBitStream = TypeVar('TConstBitStream', bound='ConstBitStream')
 
 class ConstBitStream(Bits):
     """A container or stream holding an immutable sequence of bits.
@@ -56,11 +53,9 @@ class ConstBitStream(Bits):
     len -- Length of the bitstring in bits.
     pos -- The current bit position in the bitstring.
     """
-
     __slots__ = ('_pos',)
 
-    def __init__(self, auto: Optional[Union[BitsType, int]] = None, /, length: Optional[int] = None,
-                 offset: Optional[int] = None, pos: int = 0, **kwargs) -> None:
+    def __init__(self, auto: Optional[Union[BitsType, int]]=None, /, length: Optional[int]=None, offset: Optional[int]=None, pos: int=0, **kwargs) -> None:
         """Either specify an 'auto' initialiser:
         A string of comma separated tokens, an integer, a file object,
         a bytearray, a boolean iterable or another bitstring.
@@ -103,43 +98,30 @@ class ConstBitStream(Bits):
         if pos < 0:
             pos += len(self._bitstore)
         if pos < 0 or pos > len(self._bitstore):
-            raise bitstring.CreationError(f"Cannot set pos to {pos} when length is {len(self._bitstore)}.")
+            raise bitstring.CreationError(f'Cannot set pos to {pos} when length is {len(self._bitstore)}.')
         self._pos = pos
         self._bitstore.immutable = True
 
     def _setbytepos(self, bytepos: int) -> None:
         """Move to absolute byte-aligned position in stream."""
-        self._setbitpos(bytepos * 8)
+        pass
 
     def _getbytepos(self) -> int:
         """Return the current position in the stream in bytes. Must be byte aligned."""
-        if self._pos % 8:
-            raise bitstring.ByteAlignError("Not byte aligned when using bytepos property.")
-        return self._pos // 8
+        pass
 
     def _setbitpos(self, pos: int) -> None:
         """Move to absolute position bit in bitstream."""
-        if pos < 0:
-            raise ValueError("Bit position cannot be negative.")
-        if pos > len(self):
-            raise ValueError("Cannot seek past the end of the data.")
-        self._pos = pos
+        pass
 
     def _getbitpos(self) -> int:
         """Return the current position in the stream in bits."""
-        return self._pos
-
-    def _clear(self) -> None:
-        Bits._clear(self)
-        self._pos = 0
+        pass
 
     def __copy__(self: TConstBitStream) -> TConstBitStream:
         """Return a new copy of the ConstBitStream for the copy module."""
-        # Note that if you want a new copy (different ID), use _copy instead.
-        # The copy can use the same datastore as it's immutable.
         s = self.__class__()
         s._bitstore = self._bitstore
-        # Reset the bit position, don't copy it.
         s._pos = 0
         return s
 
@@ -197,8 +179,7 @@ class ConstBitStream(Bits):
         The current bit position will be moved to the end of the BitStream.
 
         """
-        self._append(bs)
-        self._pos = len(self)
+        pass
 
     def __repr__(self) -> str:
         """Return representation that could be used to recreate the bitstring.
@@ -208,7 +189,7 @@ class ConstBitStream(Bits):
         """
         return self._repr(self.__class__.__name__, len(self), self._pos)
 
-    def overwrite(self, bs: BitsType, /, pos: Optional[int] = None) -> None:
+    def overwrite(self, bs: BitsType, /, pos: Optional[int]=None) -> None:
         """Overwrite with bitstring at bit position pos.
 
         bs -- The bitstring to overwrite with.
@@ -218,20 +199,9 @@ class ConstBitStream(Bits):
         Raises ValueError if pos < 0 or pos > len(self).
 
         """
-        bs = Bits._create_from_bitstype(bs)
-        if len(bs) == 0:
-            return
-        if pos is None:
-            pos = self._pos
-        if pos < 0:
-            pos += len(self)
-        if pos < 0 or pos > len(self):
-            raise ValueError("Overwrite starts outside boundary of bitstring.")
-        self._overwrite(bs, pos)
-        self._pos = pos + len(bs)
+        pass
 
-    def find(self, bs: BitsType, /, start: Optional[int] = None, end: Optional[int] = None,
-             bytealigned: Optional[bool] = None) -> Union[Tuple[int], Tuple[()]]:
+    def find(self, bs: BitsType, /, start: Optional[int]=None, end: Optional[int]=None, bytealigned: Optional[bool]=None) -> Union[Tuple[int], Tuple[()]]:
         """Find first occurrence of substring bs.
 
         Returns a single item tuple with the bit position if found, or an
@@ -252,14 +222,9 @@ class ConstBitStream(Bits):
         (6,)
 
         """
+        pass
 
-        p = super().find(bs, start, end, bytealigned)
-        if p:
-            self._pos = p[0]
-        return p
-
-    def rfind(self, bs: BitsType, /, start: Optional[int] = None, end: Optional[int] = None,
-              bytealigned: Optional[bool] = None) -> Union[Tuple[int], Tuple[()]]:
+    def rfind(self, bs: BitsType, /, start: Optional[int]=None, end: Optional[int]=None, bytealigned: Optional[bool]=None) -> Union[Tuple[int], Tuple[()]]:
         """Find final occurrence of substring bs.
 
         Returns a single item tuple with the bit position if found, or an
@@ -277,18 +242,7 @@ class ConstBitStream(Bits):
         if end < start.
 
         """
-        p = super().rfind(bs, start, end, bytealigned)
-        if p:
-            self._pos = p[0]
-        return p
-
-    @overload
-    def read(self, fmt: int) -> Bits:
-        ...
-
-    @overload
-    def read(self, fmt: str) -> Any:
-        ...
+        pass
 
     def read(self, fmt: Union[int, str, Dtype]) -> Union[int, float, str, Bits, bool, bytes, None]:
         """Interpret next bits according to the format string and return result.
@@ -326,38 +280,9 @@ class ConstBitStream(Bits):
         Raises ValueError if the format is not understood.
 
         """
-        p = self._pos
-        if isinstance(fmt, numbers.Integral):
-            if fmt < 0:
-                raise ValueError("Cannot read negative amount.")
-            if fmt > len(self) - self._pos:
-                raise bitstring.ReadError(f"Cannot read {fmt} bits, only {len(self) - self._pos} available.")
-            bs = self._slice(self._pos, self._pos + fmt)
-            self._pos += fmt
-            return bs
-        dtype = bitstring.dtypes.Dtype(fmt)
-        if dtype.bitlength is None and not dtype.variable_length:
-            # No length specified? Try again, but read to end.
-            bitlength = len(self) - self._pos
-            items, remainder = divmod(bitlength, dtype.bits_per_item)
-            if remainder != 0:
-                raise ValueError(
-                    f"The '{dtype.name}' type must have a bit length that is a multiple of {dtype.bits_per_item}"
-                    f" so cannot be read from the {bitlength} bits that are available.")
-            dtype = bitstring.dtypes.Dtype(fmt, items)
-        if dtype.bitlength is not None:
-            val = dtype.read_fn(self, self._pos)
-            self._pos += dtype.bitlength
-        else:
-            val, self._pos = dtype.read_fn(self, self._pos)
+        pass
 
-        if self._pos > len(self):
-            self._pos = p
-            raise bitstring.ReadError(f"Reading off end of bitstring with fmt '{fmt}'. Only {len(self) - p} bits available.")
-        return val
-
-    def readlist(self, fmt: Union[str, List[Union[int, str, Dtype]]], **kwargs) \
-            -> List[Union[int, float, str, Bits, bool, bytes, None]]:
+    def readlist(self, fmt: Union[str, List[Union[int, str, Dtype]]], **kwargs) -> List[Union[int, float, str, Bits, bool, bytes, None]]:
         """Interpret next bits according to format string(s) and return list.
 
         fmt -- A single string or list of strings with comma separated tokens
@@ -378,10 +303,9 @@ class ConstBitStream(Bits):
         >>> i, bs1, bs2 = s.readlist(['uint:12', 10, 10])
 
         """
-        value, self._pos = self._readlist(fmt, self._pos, **kwargs)
-        return value
+        pass
 
-    def readto(self: TConstBitStream, bs: BitsType, /, bytealigned: Optional[bool] = None) -> TConstBitStream:
+    def readto(self: TConstBitStream, bs: BitsType, /, bytealigned: Optional[bool]=None) -> TConstBitStream:
         """Read up to and including next occurrence of bs and return result.
 
         bs -- The bitstring to find.
@@ -392,23 +316,7 @@ class ConstBitStream(Bits):
         Raises ReadError if bs is not found.
 
         """
-        if isinstance(bs, numbers.Integral):
-            raise ValueError("Integers cannot be searched for")
-        bs = Bits._create_from_bitstype(bs)
-        oldpos = self._pos
-        p = self.find(bs, self._pos, bytealigned=bytealigned)
-        if not p:
-            raise bitstring.ReadError("Substring not found")
-        self._pos += len(bs)
-        return self._slice(oldpos, self._pos)
-
-    @overload
-    def peek(self: TConstBitStream, fmt: int) -> TConstBitStream:
-        ...
-
-    @overload
-    def peek(self, fmt: str) -> Union[int, float, str, TConstBitStream, bool, bytes, None]:
-        ...
+        pass
 
     def peek(self: TConstBitStream, fmt: Union[int, str]) -> Union[int, float, str, TConstBitStream, bool, bytes, None]:
         """Interpret next bits according to format string and return result.
@@ -424,13 +332,9 @@ class ConstBitStream(Bits):
         See the docstring for 'read' for token examples.
 
         """
-        pos_before = self._pos
-        value = self.read(fmt)
-        self._pos = pos_before
-        return value
+        pass
 
-    def peeklist(self, fmt: Union[str, List[Union[int, str]]], **kwargs) \
-            -> List[Union[int, float, str, Bits, None]]:
+    def peeklist(self, fmt: Union[str, List[Union[int, str]]], **kwargs) -> List[Union[int, float, str, Bits, None]]:
         """Interpret next bits according to format string(s) and return list.
 
         fmt -- One or more integers or strings with comma separated tokens describing
@@ -447,10 +351,7 @@ class ConstBitStream(Bits):
         See the docstring for 'read' for token examples.
 
         """
-        pos = self._pos
-        return_values = self.readlist(fmt, **kwargs)
-        self._pos = pos
-        return return_values
+        pass
 
     def bytealign(self) -> int:
         """Align to next byte and return number of skipped bits.
@@ -459,16 +360,7 @@ class ConstBitStream(Bits):
         aligning to the next byte.
 
         """
-        skipped = (8 - (self._pos % 8)) % 8
-        self.pos += skipped
-        return skipped
-
-    @classmethod
-    def fromstring(cls: TBits, s: str, /) -> TBits:
-        x = super().fromstring(s)
-        x._pos = 0
-        x._bitstore.immutable = True
-        return x
+        pass
 
     @overload
     def __getitem__(self: TBits, key: slice, /) -> TBits:
@@ -486,17 +378,9 @@ class ConstBitStream(Bits):
         bs._bitstore = self._bitstore.getslice_withstep(key)
         bs._pos = 0
         return bs
-
-    pos = property(_getbitpos, _setbitpos,
-                   doc="""The position in the bitstring in bits. Read and write.
-                      """)
-    bitpos = property(_getbitpos, _setbitpos,
-                      doc="""The position in the bitstring in bits. Read and write.
-                      """)
-    bytepos = property(_getbytepos, _setbytepos,
-                       doc="""The position in the bitstring in bytes. Read and write.
-                      """)
-
+    pos = property(_getbitpos, _setbitpos, doc='The position in the bitstring in bits. Read and write.\n                      ')
+    bitpos = property(_getbitpos, _setbitpos, doc='The position in the bitstring in bits. Read and write.\n                      ')
+    bytepos = property(_getbytepos, _setbytepos, doc='The position in the bitstring in bytes. Read and write.\n                      ')
 
 class BitStream(ConstBitStream, bitstring.BitArray):
     """A container or stream holding a mutable sequence of bits
@@ -555,11 +439,9 @@ class BitStream(ConstBitStream, bitstring.BitArray):
     len -- Length of the bitstring in bits.
     pos -- The current bit position in the bitstring.
     """
-
     __slots__ = ()
 
-    def __init__(self, auto: Optional[Union[BitsType, int]] = None, /, length: Optional[int] = None,
-                 offset: Optional[int] = None, pos: int = 0, **kwargs) -> None:
+    def __init__(self, auto: Optional[Union[BitsType, int]]=None, /, length: Optional[int]=None, offset: Optional[int]=None, pos: int=0, **kwargs) -> None:
         """Either specify an 'auto' initialiser:
         A string of comma separated tokens, an integer, a file object,
         a bytearray, a boolean iterable or another bitstring.
@@ -628,9 +510,7 @@ class BitStream(ConstBitStream, bitstring.BitArray):
         bs -- The bitstring to prepend.
 
         """
-        bs = Bits._create_from_bitstype(bs)
-        super().prepend(bs)
-        self._pos = 0
+        pass
 
     def __setitem__(self, /, key: Union[slice, int], value: BitsType) -> None:
         length_before = len(self)
@@ -653,7 +533,7 @@ class BitStream(ConstBitStream, bitstring.BitArray):
         if len(self) != length_before:
             self._pos = 0
 
-    def insert(self, bs: BitsType, /, pos: Optional[int] = None) -> None:
+    def insert(self, bs: BitsType, /, pos: Optional[int]=None) -> None:
         """Insert bitstring at bit position pos.
 
         bs -- The bitstring to insert.
@@ -663,22 +543,9 @@ class BitStream(ConstBitStream, bitstring.BitArray):
         Raises ValueError if pos < 0 or pos > len(self).
 
         """
-        bs = Bits._create_from_bitstype(bs)
-        if len(bs) == 0:
-            return
-        if bs is self:
-            bs = self._copy()
-        if pos is None:
-            pos = self._pos
-        if pos < 0:
-            pos += len(self)
-        if not 0 <= pos <= len(self):
-            raise ValueError("Invalid insert position.")
-        self._insert(bs, pos)
-        self._pos = pos + len(bs)
+        pass
 
-    def replace(self, old: BitsType, new: BitsType, start: Optional[int] = None, end: Optional[int] = None,
-                count: Optional[int] = None, bytealigned: Optional[bool] = None) -> int:
+    def replace(self, old: BitsType, new: BitsType, start: Optional[int]=None, end: Optional[int]=None, count: Optional[int]=None, bytealigned: Optional[bool]=None) -> int:
         """Replace all occurrences of old with new in place.
 
         Returns number of replacements made.
@@ -698,17 +565,4 @@ class BitStream(ConstBitStream, bitstring.BitArray):
         out of range.
 
         """
-        if count == 0:
-            return 0
-        if len(old := Bits._create_from_bitstype(old)) == 0:
-            raise ValueError("Empty bitstring cannot be replaced.")
-        start, end = self._validate_slice(start, end)
-        new = Bits._create_from_bitstype(new)
-        if new is self:
-            # Prevent self assignment woes
-            new = copy.copy(self)
-        length_before = len(self)
-        replacement_count = self._replace(old, new, start, end, 0 if count is None else count, bytealigned)
-        if len(self) != length_before:
-            self._pos = 0
-        return replacement_count
+        pass
